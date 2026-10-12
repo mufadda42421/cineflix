@@ -1,0 +1,328 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // GLOBAL SAFETY NET (Default-Deny Catch-All)
+    // =========================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // =========================================================================
+    // PHASE 3: HARDENED GLOBAL PRIMITIVES
+    // =========================================================================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isVerifiedOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isBoundedIntList(arr, maxLen) {
+      return arr is list && arr.size() <= maxLen && (arr.size() == 0 || arr[0] is int);
+    }
+
+    function parentUserExists(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId));
+    }
+
+    // =========================================================================
+    // VALIDATION BLUEPRINTS (Pillar 2: Anti-Update-Gap & Strict Schema Bounds)
+    // =========================================================================
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll([
+          'uid',
+          'displayName',
+          'email',
+          'photoURL',
+          'bio',
+          'favoriteGenres',
+          'autoplayTrailers',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid',
+          'displayName',
+          'email',
+          'photoURL',
+          'bio',
+          'favoriteGenres',
+          'autoplayTrailers',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.uid == request.auth.uid
+        && data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
+        && data.photoURL is string && data.photoURL.size() <= 500
+        && data.bio is string && data.bio.size() <= 240
+        && isBoundedIntList(data.favoriteGenres, 10)
+        && data.autoplayTrailers is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidWatchlistItem(data) {
+      return data.keys().hasAll([
+          'userId',
+          'tmdbId',
+          'mediaType',
+          'title',
+          'overview',
+          'posterPath',
+          'backdropPath',
+          'releaseDate',
+          'voteAverage',
+          'genreIds',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'userId',
+          'tmdbId',
+          'mediaType',
+          'title',
+          'overview',
+          'posterPath',
+          'backdropPath',
+          'releaseDate',
+          'voteAverage',
+          'genreIds',
+          'createdAt'
+        ])
+        && data.userId == request.auth.uid
+        && data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 && data.userId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.tmdbId is int && data.tmdbId > 0
+        && data.mediaType is string && data.mediaType.size() >= 2 && data.mediaType.size() <= 10 && (data.mediaType == 'movie' || data.mediaType == 'tv')
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+        && data.overview is string && data.overview.size() <= 1000
+        && data.posterPath is string && data.posterPath.size() <= 200
+        && data.backdropPath is string && data.backdropPath.size() <= 200
+        && data.releaseDate is string && data.releaseDate.size() <= 30
+        && (data.voteAverage is int || data.voteAverage is float) && data.voteAverage >= 0 && data.voteAverage <= 10
+        && isBoundedIntList(data.genreIds, 10)
+        && data.createdAt is timestamp;
+    }
+
+    function isValidViewingHistoryItem(data) {
+      return data.keys().hasAll([
+          'userId',
+          'tmdbId',
+          'mediaType',
+          'title',
+          'overview',
+          'posterPath',
+          'backdropPath',
+          'releaseDate',
+          'voteAverage',
+          'genreIds',
+          'progressSeconds',
+          'durationSeconds',
+          'seasonNumber',
+          'episodeNumber',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId',
+          'tmdbId',
+          'mediaType',
+          'title',
+          'overview',
+          'posterPath',
+          'backdropPath',
+          'releaseDate',
+          'voteAverage',
+          'genreIds',
+          'progressSeconds',
+          'durationSeconds',
+          'seasonNumber',
+          'episodeNumber',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.userId == request.auth.uid
+        && data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 && data.userId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.tmdbId is int && data.tmdbId > 0
+        && data.mediaType is string && data.mediaType.size() >= 2 && data.mediaType.size() <= 10 && (data.mediaType == 'movie' || data.mediaType == 'tv')
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+        && data.overview is string && data.overview.size() <= 1000
+        && data.posterPath is string && data.posterPath.size() <= 200
+        && data.backdropPath is string && data.backdropPath.size() <= 200
+        && data.releaseDate is string && data.releaseDate.size() <= 30
+        && (data.voteAverage is int || data.voteAverage is float) && data.voteAverage >= 0 && data.voteAverage <= 10
+        && isBoundedIntList(data.genreIds, 10)
+        && (data.progressSeconds is int || data.progressSeconds is float) && data.progressSeconds >= 0 && data.progressSeconds <= 86400
+        && (data.durationSeconds is int || data.durationSeconds is float) && data.durationSeconds >= 0 && data.durationSeconds <= 86400
+        && data.seasonNumber is int && data.seasonNumber >= 1 && data.seasonNumber <= 100
+        && data.episodeNumber is int && data.episodeNumber >= 1 && data.episodeNumber <= 2000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // =========================================================================
+    // CONNECTION TEST PATH (Read-only connectivity validation)
+    // =========================================================================
+    match /test/connection {
+      allow get: if true;
+      allow list, write: if false;
+    }
+
+    // =========================================================================
+    // COLLECTION 1: /users/{userId} (PII Isolated to Owner Only)
+    // =========================================================================
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+
+      allow create: if isVerifiedOwner(userId)
+        && isValidId(userId)
+        && isValidUserProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if (
+        isVerifiedOwner(userId)
+        && isValidId(userId)
+        && isValidUserProfile(incoming())
+        && incoming().uid == existing().uid
+        && incoming().email == existing().email
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action: UpdateProfilePreferences
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'displayName',
+            'photoURL',
+            'bio',
+            'favoriteGenres',
+            'autoplayTrailers',
+            'updatedAt'
+          ])
+        )
+      );
+
+      allow delete: if isVerifiedOwner(userId) && isValidId(userId);
+
+      // =======================================================================
+      // SUBCOLLECTION 2: /users/{userId}/watchlist/{itemId}
+      // =======================================================================
+      match /watchlist/{itemId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(itemId) && parentUserExists(userId);
+        allow list: if isOwner(userId) && existing().userId == request.auth.uid;
+
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(itemId)
+          && isValidWatchlistItem(incoming())
+          && incoming().createdAt == request.time
+          && parentUserExists(userId);
+
+        allow update: if (
+          isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(itemId)
+          && isValidWatchlistItem(incoming())
+          && incoming().userId == existing().userId
+          && incoming().tmdbId == existing().tmdbId
+          && incoming().mediaType == existing().mediaType
+          && incoming().createdAt == existing().createdAt
+          && parentUserExists(userId)
+          && (
+            // Action: RefreshWatchlistMetadata
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'title',
+              'overview',
+              'posterPath',
+              'backdropPath',
+              'releaseDate',
+              'voteAverage',
+              'genreIds'
+            ])
+          )
+        );
+
+        allow delete: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(itemId)
+          && parentUserExists(userId);
+      }
+
+      // =======================================================================
+      // SUBCOLLECTION 3: /users/{userId}/history/{itemId}
+      // =======================================================================
+      match /history/{itemId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(itemId) && parentUserExists(userId);
+        allow list: if isOwner(userId) && existing().userId == request.auth.uid;
+
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(itemId)
+          && isValidViewingHistoryItem(incoming())
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && parentUserExists(userId);
+
+        allow update: if (
+          isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(itemId)
+          && isValidViewingHistoryItem(incoming())
+          && incoming().userId == existing().userId
+          && incoming().tmdbId == existing().tmdbId
+          && incoming().mediaType == existing().mediaType
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && parentUserExists(userId)
+          && (
+            // Action: UpdatePlaybackProgress
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'title',
+              'overview',
+              'posterPath',
+              'backdropPath',
+              'releaseDate',
+              'voteAverage',
+              'genreIds',
+              'progressSeconds',
+              'durationSeconds',
+              'seasonNumber',
+              'episodeNumber',
+              'updatedAt'
+            ])
+          )
+        );
+
+        allow delete: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(itemId)
+          && parentUserExists(userId);
+      }
+    }
+  }
+}

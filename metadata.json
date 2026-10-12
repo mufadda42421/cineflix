@@ -1,0 +1,6 @@
+{
+  "name": "CineFlix — Movie & TV Discovery Platform",
+  "description": "A cinematic movie and TV show discovery platform powered by the TMDB API, featuring real-time multi-search, HD trailer playback, personalized genre recommendations, and local watchlist management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

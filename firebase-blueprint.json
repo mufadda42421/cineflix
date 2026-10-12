@@ -1,0 +1,277 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private user profile and discovery preferences for a CineFlix account.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address (isolated to owner read only).",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Profile avatar URL.",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "bio": {
+          "type": "string",
+          "description": "Short cinephile bio or profile tagline.",
+          "minLength": 0,
+          "maxLength": 240
+        },
+        "favoriteGenres": {
+          "type": "array",
+          "description": "Bounded list of up to 10 preferred TMDB genre IDs.",
+          "maxLength": 10
+        },
+        "autoplayTrailers": {
+          "type": "boolean",
+          "description": "Whether trailers and streams autoplay on open."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the profile was last updated."
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "email",
+        "photoURL",
+        "bio",
+        "favoriteGenres",
+        "autoplayTrailers",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "WatchlistItem": {
+      "title": "WatchlistItem",
+      "description": "A movie or TV series saved to a user's persistent My List watchlist.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of the user who owns this watchlist entry.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "tmdbId": {
+          "type": "number",
+          "description": "TMDB numeric ID of the movie or TV show."
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": ["movie", "tv"],
+          "description": "Whether the title is a movie or tv series.",
+          "minLength": 2,
+          "maxLength": 10
+        },
+        "title": {
+          "type": "string",
+          "description": "Display title of the movie or series.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "overview": {
+          "type": "string",
+          "description": "Synopsis overview truncated to 1000 chars.",
+          "minLength": 0,
+          "maxLength": 1000
+        },
+        "posterPath": {
+          "type": "string",
+          "description": "TMDB poster path or empty string.",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "backdropPath": {
+          "type": "string",
+          "description": "TMDB backdrop path or empty string.",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "releaseDate": {
+          "type": "string",
+          "description": "Release or first air date string.",
+          "minLength": 0,
+          "maxLength": 30
+        },
+        "voteAverage": {
+          "type": "number",
+          "description": "TMDB rating average (0 to 10)."
+        },
+        "genreIds": {
+          "type": "array",
+          "description": "Bounded list of up to 10 TMDB genre IDs.",
+          "maxLength": 10
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when added to watchlist."
+        }
+      },
+      "required": [
+        "userId",
+        "tmdbId",
+        "mediaType",
+        "title",
+        "overview",
+        "posterPath",
+        "backdropPath",
+        "releaseDate",
+        "voteAverage",
+        "genreIds",
+        "createdAt"
+      ]
+    },
+    "ViewingHistoryItem": {
+      "title": "ViewingHistoryItem",
+      "description": "A movie or TV series watched by the user, used for Continue Watching and personalized TMDB recommendations.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of the user who watched this title.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "tmdbId": {
+          "type": "number",
+          "description": "TMDB numeric ID of the movie or TV show."
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": ["movie", "tv"],
+          "description": "Whether the title is a movie or tv series.",
+          "minLength": 2,
+          "maxLength": 10
+        },
+        "title": {
+          "type": "string",
+          "description": "Display title of the movie or series.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "overview": {
+          "type": "string",
+          "description": "Synopsis overview truncated to 1000 chars.",
+          "minLength": 0,
+          "maxLength": 1000
+        },
+        "posterPath": {
+          "type": "string",
+          "description": "TMDB poster path or empty string.",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "backdropPath": {
+          "type": "string",
+          "description": "TMDB backdrop path or empty string.",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "releaseDate": {
+          "type": "string",
+          "description": "Release or first air date string.",
+          "minLength": 0,
+          "maxLength": 30
+        },
+        "voteAverage": {
+          "type": "number",
+          "description": "TMDB rating average (0 to 10)."
+        },
+        "genreIds": {
+          "type": "array",
+          "description": "Bounded list of up to 10 TMDB genre IDs.",
+          "maxLength": 10
+        },
+        "progressSeconds": {
+          "type": "number",
+          "description": "Playback position in seconds."
+        },
+        "durationSeconds": {
+          "type": "number",
+          "description": "Total duration in seconds."
+        },
+        "seasonNumber": {
+          "type": "number",
+          "description": "Season number for TV series (1 for movies)."
+        },
+        "episodeNumber": {
+          "type": "number",
+          "description": "Episode number for TV series (1 for movies)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when first watched."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when playback progress was last updated."
+        }
+      },
+      "required": [
+        "userId",
+        "tmdbId",
+        "mediaType",
+        "title",
+        "overview",
+        "posterPath",
+        "backdropPath",
+        "releaseDate",
+        "voteAverage",
+        "genreIds",
+        "progressSeconds",
+        "durationSeconds",
+        "seasonNumber",
+        "episodeNumber",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user account profile and discovery preferences. Strictly isolated to owner."
+    },
+    "/users/{userId}/watchlist/{itemId}": {
+      "schema": { "$ref": "#/entities/WatchlistItem" },
+      "description": "User's persistent cross-device My List watchlist items."
+    },
+    "/users/{userId}/history/{itemId}": {
+      "schema": { "$ref": "#/entities/ViewingHistoryItem" },
+      "description": "User's viewing history and playback progress used for personalized TMDB recommendations."
+    }
+  }
+}
